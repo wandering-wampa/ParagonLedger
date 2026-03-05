@@ -1,0 +1,628 @@
+{
+  "meta": {
+    "source": "homecoming.wiki",
+    "generated_at": "2026-03-05T17:04:03.714Z",
+    "root_categories": [
+      "Category:Zones",
+      "Category:City Zones",
+      "Category:Hazard Zones",
+      "Category:Trial Zones",
+      "Category:PvP Zones",
+      "Category:Co-op Zones",
+      "Category:Rogue Isles Zones",
+      "Category:Praetorian Zones"
+    ]
+  },
+  "zones": [
+    {
+      "name": "Abandoned Sewer Network",
+      "source_page": "Abandoned Sewer Network",
+      "categories": [
+        "Hero Trial Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Atlas Park",
+      "source_page": "Atlas Park",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Behavioral Adjustment Facility",
+      "source_page": "Behavioral Adjustment Facility",
+      "categories": [
+        "No-Badge Plaques",
+        "Praetorian City Zones"
+      ]
+    },
+    {
+      "name": "Bloody Bay",
+      "source_page": "Bloody Bay",
+      "categories": [
+        "PvP Zones"
+      ]
+    },
+    {
+      "name": "Boomtown",
+      "source_page": "Boomtown",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Breakout",
+      "source_page": "Breakout",
+      "categories": [
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Brickstown",
+      "source_page": "Brickstown",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Cap au Diable",
+      "source_page": "Cap au Diable",
+      "categories": [
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Cascade Archipelago",
+      "source_page": "Cascade Archipelago",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones",
+        "Shadow Shard Lore",
+        "Shadow Shard Zones"
+      ]
+    },
+    {
+      "name": "Cimerora",
+      "source_page": "Cimerora",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Trial Zones",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "Crey's Folly",
+      "source_page": "Crey's Folly",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Croatoa",
+      "source_page": "Croatoa",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Dark Astoria",
+      "source_page": "Dark Astoria",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Trial Zones",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "Echo Plaza",
+      "source_page": "Echo Plaza",
+      "categories": [
+        "Cooperative Zones",
+        "Social Zones"
+      ]
+    },
+    {
+      "name": "Echo: Atlas Park",
+      "source_page": "Echo: Atlas Park",
+      "categories": [
+        "Echo Zones",
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Echo: Dark Astoria",
+      "source_page": "Echo: Dark Astoria",
+      "categories": [
+        "Cooperative Zones",
+        "Echo Zones",
+        "Hero Hazard Zones"
+      ]
+    },
+    {
+      "name": "Echo: Faultline",
+      "source_page": "Echo: Faultline",
+      "categories": [
+        "Echo Zones",
+        "Hero Hazard Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Echo: Galaxy City",
+      "source_page": "Echo: Galaxy City",
+      "categories": [
+        "Echo Zones",
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Echo: Rikti Crash Site",
+      "source_page": "Echo: Rikti Crash Site",
+      "categories": [
+        "Cooperative Zones",
+        "Echo Zones",
+        "Hero Trial Zones",
+        "Rikti Lore"
+      ]
+    },
+    {
+      "name": "Eden",
+      "source_page": "Eden",
+      "categories": [
+        "Hero Trial Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Faultline",
+      "source_page": "Faultline",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Firebase Zulu",
+      "source_page": "Firebase Zulu",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones",
+        "Shadow Shard Lore",
+        "Shadow Shard Zones"
+      ]
+    },
+    {
+      "name": "First Ward",
+      "source_page": "First Ward",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Founders' Falls",
+      "source_page": "Founders' Falls",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Galaxy City",
+      "source_page": "Galaxy City",
+      "categories": [
+        "Bugs",
+        "City Zones",
+        "Hero City Zones"
+      ]
+    },
+    {
+      "name": "Galaxy City (Pre-Issue 21)",
+      "source_page": "Galaxy City (Pre-Issue 21)",
+      "categories": [
+        "Hero City Zones",
+        "Legacy Zones"
+      ]
+    },
+    {
+      "name": "Grandville",
+      "source_page": "Grandville",
+      "categories": [
+        "Missing Dialogue",
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Imperial City",
+      "source_page": "Imperial City",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Incarnate Zone",
+      "source_page": "Incarnate Zone",
+      "categories": [
+        "Definition",
+        "Geography",
+        "Hero Trial Zones",
+        "Incarnate System",
+        "Stubs",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "Independence Port",
+      "source_page": "Independence Port",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Kallisti Wharf",
+      "source_page": "Kallisti Wharf",
+      "categories": [
+        "Cooperative Zones",
+        "Hero City Zones",
+        "Work in Progress"
+      ]
+    },
+    {
+      "name": "Kings Row",
+      "source_page": "Kings Row",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Mercy Island",
+      "source_page": "Mercy Island",
+      "categories": [
+        "Villain City Zones",
+        "Villain Zones",
+        "Work in Progress"
+      ]
+    },
+    {
+      "name": "Midnighter Club",
+      "source_page": "Midnighter Club",
+      "categories": [
+        "Cooperative Zones",
+        "Social Zones"
+      ]
+    },
+    {
+      "name": "Monster Island",
+      "source_page": "Monster Island",
+      "categories": [
+        "Villain Hazard Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Nerva Archipelago",
+      "source_page": "Nerva Archipelago",
+      "categories": [
+        "Missing Dialogue",
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Neutropolis",
+      "source_page": "Neutropolis",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Night Ward",
+      "source_page": "Night Ward",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Nova Praetoria",
+      "source_page": "Nova Praetoria",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Ouroboros",
+      "source_page": "Ouroboros",
+      "categories": [
+        "Cooperative Zones",
+        "Social Zones"
+      ]
+    },
+    {
+      "name": "Outbreak",
+      "source_page": "Outbreak",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Peregrine Island",
+      "source_page": "Peregrine Island",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Perez Park",
+      "source_page": "Perez Park",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Pocket D",
+      "source_page": "Pocket D",
+      "categories": [
+        "Cooperative Zones",
+        "Social Zones"
+      ]
+    },
+    {
+      "name": "Port Oakes",
+      "source_page": "Port Oakes",
+      "categories": [
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Precinct Five",
+      "source_page": "Precinct Five",
+      "categories": [
+        "Incomplete",
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Recluse's Victory",
+      "source_page": "Recluse's Victory",
+      "categories": [
+        "PvP Zones"
+      ]
+    },
+    {
+      "name": "Rikti War Zone",
+      "source_page": "Rikti War Zone",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Trial Zones",
+        "Rikti Lore",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "Sewer Network",
+      "source_page": "Sewer Network",
+      "categories": [
+        "Hero Trial Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Sharkhead Isle",
+      "source_page": "Sharkhead Isle",
+      "categories": [
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Siren's Call",
+      "source_page": "Siren's Call",
+      "categories": [
+        "PvP Zones"
+      ]
+    },
+    {
+      "name": "Skyway City",
+      "source_page": "Skyway City",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "St. Martial",
+      "source_page": "St. Martial",
+      "categories": [
+        "Incomplete",
+        "Villain City Zones",
+        "Villain Zones"
+      ]
+    },
+    {
+      "name": "Steel Canyon",
+      "source_page": "Steel Canyon",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Striga Isle",
+      "source_page": "Striga Isle",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Hazard Zones",
+        "Villain Hazard Zones"
+      ]
+    },
+    {
+      "name": "Studio 55",
+      "source_page": "Studio 55",
+      "categories": [
+        "Geography",
+        "No-Badge Plaques",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Talos Island",
+      "source_page": "Talos Island",
+      "categories": [
+        "Hero City Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Terra Volta",
+      "source_page": "Terra Volta",
+      "categories": [
+        "Hero Trial Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "The Abyss",
+      "source_page": "The Abyss",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Trial Zones",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "The Chantry",
+      "source_page": "The Chantry",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones",
+        "Shadow Shard Lore",
+        "Shadow Shard Zones"
+      ]
+    },
+    {
+      "name": "The Hive",
+      "source_page": "The Hive",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Trial Zones",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "The Hollows",
+      "source_page": "The Hollows",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "The Labyrinth of Fog",
+      "source_page": "The Labyrinth of Fog",
+      "categories": [
+        "Cooperative Zones",
+        "Hero Trial Zones",
+        "Villain Trial Zones",
+        "Work in Progress"
+      ]
+    },
+    {
+      "name": "The Storm Palace",
+      "source_page": "The Storm Palace",
+      "categories": [
+        "Hero Trial Zones",
+        "Hero Zones",
+        "Shadow Shard Lore",
+        "Shadow Shard Zones"
+      ]
+    },
+    {
+      "name": "The Underground",
+      "source_page": "The Underground",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Trial Zone",
+      "source_page": "Trial Zone",
+      "categories": [
+        "Geography",
+        "Hero Hazard Zones",
+        "Hero Trial Zones",
+        "Villain Hazard Zones",
+        "Villain Trial Zones"
+      ]
+    },
+    {
+      "name": "Tunnels of the Trolls",
+      "source_page": "Tunnels of the Trolls",
+      "categories": [
+        "Hero Hazard Zones",
+        "Hero Zones"
+      ]
+    },
+    {
+      "name": "Underground Imperial",
+      "source_page": "Underground Imperial",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Underground Neutropolis",
+      "source_page": "Underground Neutropolis",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Underground Nova",
+      "source_page": "Underground Nova",
+      "categories": [
+        "Praetorian City Zones",
+        "Praetorian Zones"
+      ]
+    },
+    {
+      "name": "Warburg",
+      "source_page": "Warburg",
+      "categories": [
+        "PvP Zones"
+      ]
+    },
+    {
+      "name": "Winter Forest",
+      "source_page": "Winter Forest",
+      "categories": [
+        "Cooperative Zones",
+        "Social Zones"
+      ]
+    }
+  ]
+}

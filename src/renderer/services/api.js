@@ -12,6 +12,9 @@ export const api = {
   reorderCharacters: (accountId, characterIds) =>
     window.heroLedgerApi.reorderCharacters(accountId, characterIds),
   getDashboard: (characterId) => window.heroLedgerApi.getDashboard(characterId),
+  getKnownZones: (characterId) => window.heroLedgerApi.getKnownZones(characterId),
+  addManualZoneEntry: (characterId, zoneName, timestamp = null) =>
+    window.heroLedgerApi.addManualZoneEntry(characterId, zoneName, timestamp),
   getBadgeTimeline: (characterId) => window.heroLedgerApi.getBadgeTimeline(characterId),
   getBadgeBrowser: (characterId) => window.heroLedgerApi.getBadgeBrowser(characterId),
   unlockBadge: (characterId, badgeId, unlockedAt = null) =>

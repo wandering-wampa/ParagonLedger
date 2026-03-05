@@ -134,6 +134,15 @@ This updates:
 - `data/badges.json`
 - `assets/badges/*`
 
+To refresh the local zone catalog used by manual zone selection/autocomplete:
+
+```powershell
+npm.cmd run sync:zones
+```
+
+This updates:
+- `data/zones.json`
+
 ## Notes
 
 - This is an MVP foundation focused on log parsing + character analytics.

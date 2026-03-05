@@ -51,8 +51,12 @@ const patterns = [
   },
   {
     type: "influence_gain",
-    regex: /You gained\s+([0-9,]+)\s+influence/i,
-    map: (m) => ({ amount: Number(m[1].replace(/,/g, "")) || 0 })
+    regex:
+      /You gain(?:ed)?\s+(?:[0-9,]+\s+experience\s+and\s+)?([0-9,]+)\s+(influence|infamy)\b/i,
+    map: (m) => ({
+      amount: Number(m[1].replace(/,/g, "")) || 0,
+      currency: String(m[2] || "influence").toLowerCase()
+    })
   },
   {
     type: "zone_entry",

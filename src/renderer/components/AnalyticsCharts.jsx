@@ -14,7 +14,11 @@ export function AnalyticsCharts({ dashboard }) {
   return (
     <div className="charts-grid">
       <article className="card chart-card">
-        <h3>Influence Over Time</h3>
+        <h3>Influence/Infamy Over Time (Defeats Only)</h3>
+        <p className="muted">
+          Running total is based on influence gains logged from defeating enemies. Market,
+          vendor, trade, and mail transactions are not included.
+        </p>
         <ResponsiveContainer width="100%" height={230}>
           <LineChart data={dashboard?.influenceByDay ?? []}>
             <CartesianGrid strokeDasharray="3 3" stroke="#283139" />
@@ -27,7 +31,7 @@ export function AnalyticsCharts({ dashboard }) {
               dataKey="total"
               stroke="#40d9a5"
               strokeWidth={2}
-              name="Influence"
+              name="Defeat Influence/Infamy"
             />
           </LineChart>
         </ResponsiveContainer>

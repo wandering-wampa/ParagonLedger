@@ -5,7 +5,7 @@ export function StatsGrid({ summary }) {
     { label: "Badges Earned", value: summary?.badges_earned ?? 0 },
     { label: "Enemies Defeated", value: summary?.enemies_defeated ?? 0 },
     { label: "Missions Completed", value: summary?.missions_completed ?? 0 },
-    { label: "Influence Earned", value: summary?.influence_earned ?? 0 }
+    { label: "Influence/Infamy (Defeats Only)", value: summary?.influence_earned ?? 0 }
   ];
 
   return (

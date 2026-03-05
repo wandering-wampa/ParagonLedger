@@ -1,3 +1,8 @@
+const fs = require("fs");
+const path = require("path");
+
+const ZONES_PATH = path.resolve(__dirname, "..", "..", "..", "data", "zones.json");
+
 function normalize(value) {
   return String(value || "")
     .toLowerCase()
@@ -21,6 +26,38 @@ class QueryService {
   constructor(db, { powerCatalog = null } = {}) {
     this.db = db;
     this.powerCatalog = powerCatalog;
+    this.zoneCatalog = this.loadZoneCatalog();
+  }
+
+  loadZoneCatalog() {
+    if (!fs.existsSync(ZONES_PATH)) {
+      return [];
+    }
+    try {
+      const raw = JSON.parse(fs.readFileSync(ZONES_PATH, "utf8"));
+      const items = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.zones)
+          ? raw.zones
+          : [];
+      const names = items
+        .map((row) => (typeof row === "string" ? row : row?.name))
+        .map((name) => String(name || "").trim())
+        .filter(Boolean);
+      const seen = new Set();
+      const unique = [];
+      for (const name of names) {
+        const key = name.toLowerCase();
+        if (seen.has(key)) {
+          continue;
+        }
+        seen.add(key);
+        unique.push(name);
+      }
+      return unique.sort((a, b) => a.localeCompare(b));
+    } catch {
+      return [];
+    }
   }
 
   async getAccounts() {
@@ -200,6 +237,90 @@ class QueryService {
       enemiesByDay,
       enemyFactions,
       topZones
+    };
+  }
+
+  async getKnownZones(characterId = null) {
+    const cid = Number(characterId);
+    const hasCharacter = Number.isFinite(cid) && cid > 0;
+    const characterZones = hasCharacter
+      ? await this.db.all(
+          `
+          SELECT z.zone_name AS name, COUNT(*) AS visits
+          FROM zone_activity za
+          JOIN zones z ON z.id = za.zone_id
+          WHERE za.character_id = ?
+          GROUP BY z.zone_name
+          ORDER BY visits DESC, z.zone_name COLLATE NOCASE ASC
+          LIMIT 200
+          `,
+          [cid]
+        )
+      : [];
+    const allZones = await this.db.all(
+      `
+      SELECT zone_name AS name
+      FROM zones
+      ORDER BY zone_name COLLATE NOCASE ASC
+      LIMIT 500
+      `
+    );
+
+    const seen = new Set();
+    const merged = [];
+    const mergedSources = [
+      ...this.zoneCatalog.map((name) => ({ name })),
+      ...characterZones,
+      ...allZones
+    ];
+    for (const row of mergedSources) {
+      const name = String(row?.name || "").trim();
+      if (!name) {
+        continue;
+      }
+      const key = name.toLowerCase();
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      merged.push(name);
+    }
+    return merged;
+  }
+
+  async addManualZoneEntry(characterId, zoneName, timestamp = null) {
+    const cid = Number(characterId);
+    if (!Number.isFinite(cid) || cid <= 0) {
+      return { ok: false, error: "Invalid character id." };
+    }
+    const cleanZone = String(zoneName || "").trim();
+    if (!cleanZone) {
+      return { ok: false, error: "Zone name is required." };
+    }
+
+    const character = await this.db.get("SELECT id FROM characters WHERE id = ?", [cid]);
+    if (!character) {
+      return { ok: false, error: "Character not found." };
+    }
+
+    const eventTime =
+      typeof timestamp === "string" && timestamp.trim()
+        ? timestamp.trim()
+        : new Date().toISOString();
+    await this.db.run("INSERT OR IGNORE INTO zones (zone_name) VALUES (?)", [cleanZone]);
+    const zone = await this.db.get("SELECT id FROM zones WHERE zone_name = ?", [cleanZone]);
+    if (!zone?.id) {
+      return { ok: false, error: "Failed to resolve zone id." };
+    }
+    await this.db.run(
+      "INSERT INTO zone_activity (character_id, zone_id, timestamp) VALUES (?, ?, ?)",
+      [cid, zone.id, eventTime]
+    );
+    return {
+      ok: true,
+      characterId: cid,
+      zoneName: cleanZone,
+      timestamp: eventTime
     };
   }
 

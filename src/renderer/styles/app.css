@@ -415,6 +415,14 @@ p {
   color: #7dcdb0;
 }
 
+.zone-manual-controls {
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+}
+
 .badge-browser-actions {
   margin-top: 0.2rem;
 }
@@ -437,6 +445,9 @@ p {
     grid-template-columns: 1fr;
   }
   .badge-browser-grid {
+    grid-template-columns: 1fr;
+  }
+  .zone-manual-controls {
     grid-template-columns: 1fr;
   }
   .build-meta-grid,

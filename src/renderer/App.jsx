@@ -3,7 +3,6 @@ import { api } from "./services/api";
 import { usePolling } from "./hooks/usePolling";
 import { CharacterList } from "./components/CharacterList";
 import { StatsGrid } from "./components/StatsGrid";
-import { AnalyticsCharts } from "./components/AnalyticsCharts";
 import { BadgeTimeline } from "./components/BadgeTimeline";
 import { BadgeBrowser } from "./components/BadgeBrowser";
 import { BuildPlannerPanel } from "./components/BuildPlannerPanel";
@@ -29,6 +28,9 @@ export function App() {
   const [currentLogFile, setCurrentLogFile] = useState("");
   const [currentParsedCharacter, setCurrentParsedCharacter] = useState("");
   const [lastMessage, setLastMessage] = useState("");
+  const [zoneInput, setZoneInput] = useState("");
+  const [knownZones, setKnownZones] = useState([]);
+  const [settingZone, setSettingZone] = useState(false);
   const didBootRef = useRef(false);
 
   const activeAccount = useMemo(
@@ -92,18 +94,21 @@ export function App() {
       setBadges([]);
       setBadgeCatalog([]);
       setBuildPlan({ build: null, levels: [] });
+      setKnownZones([]);
       return;
     }
-    const [dash, badgeTimeline, badgeBrowser, build] = await Promise.all([
+    const [dash, badgeTimeline, badgeBrowser, build, zones] = await Promise.all([
       api.getDashboard(selectedCharacterId),
       api.getBadgeTimeline(selectedCharacterId),
       api.getBadgeBrowser(selectedCharacterId),
-      api.getLatestBuild(selectedCharacterId)
+      api.getLatestBuild(selectedCharacterId),
+      api.getKnownZones(selectedCharacterId)
     ]);
     setDashboard(dash);
     setBadges(badgeTimeline);
     setBadgeCatalog(badgeBrowser);
     setBuildPlan(build);
+    setKnownZones(Array.isArray(zones) ? zones : []);
   }, [selectedCharacterId]);
 
   const loadParserState = useCallback(async () => {
@@ -311,6 +316,31 @@ export function App() {
     return result;
   };
 
+  const setCurrentZone = async () => {
+    if (!selectedCharacterId) {
+      setLastMessage("Select a character before setting zone.");
+      return;
+    }
+    const zoneName = zoneInput.trim();
+    if (!zoneName) {
+      setLastMessage("Enter a zone name first.");
+      return;
+    }
+    setSettingZone(true);
+    try {
+      const result = await api.addManualZoneEntry(selectedCharacterId, zoneName);
+      if (!result?.ok) {
+        setLastMessage(result?.error || "Failed to set current zone.");
+        return;
+      }
+      setLastMessage(`Current zone set to ${result.zoneName}.`);
+      setZoneInput(result.zoneName);
+      await loadCharacterData();
+    } finally {
+      setSettingZone(false);
+    }
+  };
+
   if (needsOnboarding) {
     return (
       <div className="setup-screen">
@@ -417,7 +447,6 @@ export function App() {
         />
         <section className="main-panel">
           <StatsGrid summary={dashboard?.summary} />
-          <AnalyticsCharts dashboard={dashboard} />
           <section className="split-grid">
             <section className="card">
               <h3># of Enemies Defeated by Faction</h3>
@@ -435,6 +464,23 @@ export function App() {
             </section>
             <section className="card">
               <h3>Top Zones</h3>
+              <div className="zone-manual-controls">
+                <input
+                  className="text-input"
+                  placeholder="Select zone"
+                  value={zoneInput}
+                  onChange={(event) => setZoneInput(event.target.value)}
+                  list="known-zones-list"
+                />
+                <button onClick={setCurrentZone} disabled={settingZone || !selectedCharacterId}>
+                  {settingZone ? "Setting..." : "Set Current Zone"}
+                </button>
+                <datalist id="known-zones-list">
+                  {knownZones.map((zoneName) => (
+                    <option key={zoneName} value={zoneName} />
+                  ))}
+                </datalist>
+              </div>
               <ul className="simple-list">
                 {(dashboard?.topZones || []).map((entry) => (
                   <li key={entry.name}>

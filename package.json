@@ -14,7 +14,8 @@
     "start": "set \"ELECTRON_RUN_AS_NODE=\" && electron .",
     "sync:badges": "node scripts/sync-badges-from-wiki.mjs",
     "sync:factions": "node scripts/sync-factions-from-wiki.mjs",
-    "sync:powers": "node scripts/sync-powers-from-wiki.mjs"
+    "sync:powers": "node scripts/sync-powers-from-wiki.mjs",
+    "sync:zones": "node scripts/sync-zones-from-wiki.mjs"
   },
   "dependencies": {
     "chokidar": "^4.0.3",

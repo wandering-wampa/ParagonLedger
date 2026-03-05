@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld("heroLedgerApi", {
   reorderCharacters: (accountId, characterIds) =>
     ipcRenderer.invoke("characters:reorder", accountId, characterIds),
   getDashboard: (characterId) => ipcRenderer.invoke("dashboard:get", characterId),
+  getKnownZones: (characterId) => ipcRenderer.invoke("zones:getKnown", characterId),
+  addManualZoneEntry: (characterId, zoneName, timestamp) =>
+    ipcRenderer.invoke("zones:addManualEntry", characterId, zoneName, timestamp),
   getBadgeTimeline: (characterId) =>
     ipcRenderer.invoke("badges:getTimeline", characterId),
   getBadgeBrowser: (characterId) =>

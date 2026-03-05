@@ -106,6 +106,12 @@ function wireIpc() {
   ipcMain.handle("dashboard:get", async (_event, characterId) =>
     query.getDashboard(characterId)
   );
+  ipcMain.handle("zones:getKnown", async (_event, characterId) =>
+    query.getKnownZones(characterId)
+  );
+  ipcMain.handle("zones:addManualEntry", async (_event, characterId, zoneName, timestamp) =>
+    query.addManualZoneEntry(characterId, zoneName, timestamp)
+  );
   ipcMain.handle("badges:getTimeline", async (_event, characterId) =>
     query.getBadgeTimeline(characterId)
   );
