@@ -12,7 +12,9 @@
     "dev:electron": "wait-on tcp:5173 && set \"ELECTRON_RUN_AS_NODE=\" && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
     "build:renderer": "vite build",
     "start": "set \"ELECTRON_RUN_AS_NODE=\" && electron .",
-    "sync:badges": "node scripts/sync-badges-from-wiki.mjs"
+    "sync:badges": "node scripts/sync-badges-from-wiki.mjs",
+    "sync:factions": "node scripts/sync-factions-from-wiki.mjs",
+    "sync:powers": "node scripts/sync-powers-from-wiki.mjs"
   },
   "dependencies": {
     "chokidar": "^4.0.3",

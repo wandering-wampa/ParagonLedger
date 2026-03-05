@@ -20,7 +20,7 @@ No cloud, no telemetry, no remote services.
 - Zone, mission, power-use, and loot event ingestion.
 - Basic analytics charts and top lists.
 - JSON/CSV export.
-- Initial build-planner import path (local JSON format for Mids-compatible export data).
+- Initial build-planner import path for Mids Reborn `.mbd` (JSON-based) exports.
 
 ## Project Structure
 
@@ -57,7 +57,7 @@ ParagonLedger/
       main.jsx
   data/
     badges.json
-    sample-mids-build.json
+    sample-mids-build.mbd
   index.html
   package.json
   vite.config.js
@@ -120,7 +120,8 @@ npm.cmd run dev
 ## Build Planner Import (MVP)
 
 - Click `Import Build`.
-- Select a JSON file in the shape used by [`sample-mids-build.json`](./data/sample-mids-build.json).
+- Select a `.mbd` file exported by Mids Reborn (or a JSON file with the same structure).
+- See [`sample-mids-build.mbd`](./data/sample-mids-build.mbd) for a trimmed Mids-style example payload.
 - Imported data is shown in the Build Planner panel.
 
 ## Badge Dataset Sync

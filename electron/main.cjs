@@ -6,6 +6,7 @@ const { LogIngestService } = require("../src/main/services/logIngestService");
 const { QueryService } = require("../src/main/services/queryService");
 const { ExportService } = require("../src/main/services/exportService");
 const { MidsImportService } = require("../src/main/services/midsImportService");
+const { PowerCatalogService } = require("../src/main/services/powerCatalogService");
 
 let mainWindow;
 let db;
@@ -14,6 +15,7 @@ let ingest;
 let query;
 let exporter;
 let midsImporter;
+let powerCatalog;
 
 async function upsertAccountRow(accountName, logsDir) {
   if (!accountName) {
@@ -125,7 +127,10 @@ function wireIpc() {
   ipcMain.handle("build:import", async (_event, characterId) => {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ["openFile"],
-      filters: [{ name: "JSON", extensions: ["json"] }]
+      filters: [
+        { name: "Mids Reborn Build", extensions: ["mbd"] },
+        { name: "Build JSON", extensions: ["json"] }
+      ]
     });
     if (result.canceled || !result.filePaths.length) {
       return { ok: false, canceled: true };
@@ -142,7 +147,8 @@ app.whenReady().then(async () => {
   db = await initDatabase(userDataPath);
   settings = new SettingsService(userDataPath);
   ingest = new LogIngestService(db);
-  query = new QueryService(db);
+  powerCatalog = new PowerCatalogService();
+  query = new QueryService(db, { powerCatalog });
   exporter = new ExportService(db);
   midsImporter = new MidsImportService(db);
   for (const entry of settings.getSettings().accountLogs || []) {

@@ -2,7 +2,14 @@ import fs from "fs/promises";
 import path from "path";
 
 const API = "https://homecoming.wiki/w/api.php";
-const ROOT_CATEGORY = "Category:Badges";
+const ROOT_CATEGORIES = [
+  "Category:Badges",
+  "Category:Hero Accolade Badges",
+  "Category:Villain Accolade Badges",
+  "Category:Praetorian Accolade Badges",
+  "Category:Incarnate Badges",
+  "Category:Veteran Level Badges"
+];
 const BATCH_SIZE = 25;
 const OUT_JSON = path.resolve("data", "badges.json");
 const OUT_ICONS_DIR = path.resolve("assets", "badges");
@@ -38,6 +45,10 @@ function cleanWikiText(text) {
     .trim();
 }
 
+function escapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function extractTemplateBlock(wikitext, templateName) {
   const startRe = new RegExp(`\\{\\{\\s*${templateName}\\b`, "i");
   const startMatch = wikitext.match(startRe);
@@ -67,6 +78,18 @@ function extractTemplateBlock(wikitext, templateName) {
   return null;
 }
 
+function extractSection(wikitext, sectionName) {
+  const re = new RegExp(
+    `==+\\s*${escapeRegExp(sectionName)}\\s*==+\\s*([\\s\\S]*?)(?=\\n==+\\s*[^=]|$)`,
+    "i"
+  );
+  const match = String(wikitext || "").match(re);
+  if (!match) {
+    return "";
+  }
+  return cleanWikiText(match[1] || "");
+}
+
 function extractParam(templateBlock, key) {
   if (!templateBlock) {
     return "";
@@ -82,12 +105,27 @@ function extractParam(templateBlock, key) {
   return cleanWikiText(match[1]);
 }
 
+function extractImageName(wikitext) {
+  const imageTemplate = String(wikitext || "").match(
+    /\{\{\s*Image\s*\|\s*([^|}\n]+)(?:\|[^}]*)?\}\}/i
+  );
+  if (imageTemplate && imageTemplate[1]) {
+    return imageTemplate[1].replace(/^File:/i, "").replace(/_/g, " ").trim();
+  }
+  const fileLink = String(wikitext || "").match(/\[\[\s*File\s*:\s*([^|\]]+)/i);
+  if (fileLink && fileLink[1]) {
+    return fileLink[1].replace(/^File:/i, "").replace(/_/g, " ").trim();
+  }
+  return "";
+}
+
 function parseBadgePage(page) {
   const revision = page.revisions?.[0];
   const wikitext = revision?.slots?.main?.content || "";
-  if (!wikitext || !/\{\{\s*badge display\b/i.test(wikitext)) {
+  if (!wikitext) {
     return null;
   }
+  const hasBadgeDisplay = /\{\{\s*badge display\b/i.test(wikitext);
   const categories = (page.categories || []).map((c) =>
     String(c.title || "").replace(/^Category:/i, "").trim()
   );
@@ -101,18 +139,38 @@ function parseBadgePage(page) {
 
   const displayBlock = extractTemplateBlock(wikitext, "badge display");
   const dataBlock = extractTemplateBlock(wikitext, "badge data");
-  const titleFromTemplate = extractParam(displayBlock, "title");
-  const iconRaw = extractParam(displayBlock, "icon");
-  const description = extractParam(displayBlock, "description");
+  const powerBox = extractTemplateBlock(wikitext, "PowerBox");
+  const titleFromTemplate = hasBadgeDisplay ? extractParam(displayBlock, "title") : "";
+  const iconRaw =
+    (hasBadgeDisplay ? extractParam(displayBlock, "icon") : "") || extractImageName(wikitext);
+  const description =
+    (hasBadgeDisplay ? extractParam(displayBlock, "description") : "") ||
+    extractSection(wikitext, "Description") ||
+    extractSection(wikitext, "In-Game Description") ||
+    extractParam(powerBox, "Desc");
   const categoryFromData = extractParam(dataBlock, "category");
 
   const pageTitle = String(page.title || "");
   const badgeName =
     titleFromTemplate ||
-    pageTitle.replace(/\s+Badge$/i, "").replace(/\s*\(Badge\)\s*$/i, "").trim();
+    pageTitle
+      .replace(/\s+Badge$/i, "")
+      .replace(/\s*\(Badge\)\s*$/i, "")
+      .replace(/^(?:Received|Earned)\s+(?:the\s+)?/i, "")
+      .trim();
 
   if (!badgeName) {
     return null;
+  }
+
+  if (!hasBadgeDisplay) {
+    const looksLikeBadgePage =
+      /\bBadges?\b/i.test(pageTitle) ||
+      pageTitle.endsWith(" Badge") ||
+      categories.some((c) => /Badges?/i.test(c));
+    if (!looksLikeBadgePage) {
+      return null;
+    }
   }
 
   const categoryFromCats =
@@ -156,8 +214,8 @@ async function wikiApi(params) {
   return res.json();
 }
 
-async function collectCategoryPages(rootCategory) {
-  const queue = [rootCategory];
+async function collectCategoryPages(rootCategories) {
+  const queue = [...rootCategories];
   const seenCategories = new Set();
   const pageTitles = new Set();
 
@@ -256,7 +314,7 @@ async function main() {
   await fs.mkdir(OUT_ICONS_DIR, { recursive: true });
 
   console.log("Collecting badge pages from category tree...");
-  const pageTitles = await collectCategoryPages(ROOT_CATEGORY);
+  const pageTitles = await collectCategoryPages(ROOT_CATEGORIES);
   console.log(`Found ${pageTitles.length} candidate pages.`);
 
   console.log("Fetching and parsing badge pages...");

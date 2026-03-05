@@ -109,6 +109,7 @@ async function ensureSchema(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL,
       enemy_name TEXT NOT NULL,
+      enemy_faction TEXT,
       timestamp TEXT NOT NULL,
       FOREIGN KEY(character_id) REFERENCES characters(id)
     );
@@ -168,6 +169,15 @@ async function ensureSchema(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL,
       source_file TEXT,
+      build_name TEXT,
+      class_name TEXT,
+      origin TEXT,
+      alignment TEXT,
+      target_level INTEGER,
+      mids_app TEXT,
+      mids_version TEXT,
+      mids_database TEXT,
+      mids_database_version TEXT,
       imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(character_id) REFERENCES characters(id)
     );
@@ -176,9 +186,31 @@ async function ensureSchema(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       build_plan_id INTEGER NOT NULL,
       level INTEGER NOT NULL,
+      power_uid TEXT,
+      power_set TEXT,
       power_name TEXT NOT NULL,
+      stat_include INTEGER NOT NULL DEFAULT 1,
+      proc_include INTEGER NOT NULL DEFAULT 1,
+      variable_value INTEGER NOT NULL DEFAULT 0,
+      inherent_slots_used INTEGER NOT NULL DEFAULT 0,
       enhancement_slots INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY(build_plan_id) REFERENCES build_plans(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS build_plan_enhancements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      build_plan_level_id INTEGER NOT NULL,
+      slot_level INTEGER NOT NULL DEFAULT 0,
+      is_inherent INTEGER NOT NULL DEFAULT 0,
+      enhancement_uid TEXT NOT NULL,
+      enhancement_display TEXT,
+      enhancement_set TEXT,
+      set_piece TEXT,
+      grade TEXT,
+      io_level INTEGER,
+      relative_level TEXT,
+      obtained INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY(build_plan_level_id) REFERENCES build_plan_levels(id)
     );
 
     CREATE TABLE IF NOT EXISTS parser_state (
@@ -273,6 +305,62 @@ async function migrateLegacySchema(db) {
   if (!accountIdExists) {
     await db.exec("ALTER TABLE characters ADD COLUMN account_id INTEGER;");
   }
+
+  const enemyFactionExists = await hasColumn(db, "enemy_defeats", "enemy_faction");
+  if (!enemyFactionExists) {
+    await db.exec("ALTER TABLE enemy_defeats ADD COLUMN enemy_faction TEXT;");
+  }
+
+  const buildPlanColumns = [
+    ["build_name", "TEXT"],
+    ["class_name", "TEXT"],
+    ["origin", "TEXT"],
+    ["alignment", "TEXT"],
+    ["target_level", "INTEGER"],
+    ["mids_app", "TEXT"],
+    ["mids_version", "TEXT"],
+    ["mids_database", "TEXT"],
+    ["mids_database_version", "TEXT"]
+  ];
+  for (const [name, type] of buildPlanColumns) {
+    const exists = await hasColumn(db, "build_plans", name);
+    if (!exists) {
+      await db.exec(`ALTER TABLE build_plans ADD COLUMN ${name} ${type};`);
+    }
+  }
+
+  const buildLevelColumns = [
+    ["power_uid", "TEXT"],
+    ["power_set", "TEXT"],
+    ["stat_include", "INTEGER NOT NULL DEFAULT 1"],
+    ["proc_include", "INTEGER NOT NULL DEFAULT 1"],
+    ["variable_value", "INTEGER NOT NULL DEFAULT 0"],
+    ["inherent_slots_used", "INTEGER NOT NULL DEFAULT 0"]
+  ];
+  for (const [name, type] of buildLevelColumns) {
+    const exists = await hasColumn(db, "build_plan_levels", name);
+    if (!exists) {
+      await db.exec(`ALTER TABLE build_plan_levels ADD COLUMN ${name} ${type};`);
+    }
+  }
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS build_plan_enhancements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      build_plan_level_id INTEGER NOT NULL,
+      slot_level INTEGER NOT NULL DEFAULT 0,
+      is_inherent INTEGER NOT NULL DEFAULT 0,
+      enhancement_uid TEXT NOT NULL,
+      enhancement_display TEXT,
+      enhancement_set TEXT,
+      set_piece TEXT,
+      grade TEXT,
+      io_level INTEGER,
+      relative_level TEXT,
+      obtained INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY(build_plan_level_id) REFERENCES build_plan_levels(id)
+    );
+  `);
 
   const nullAccountRows = await db.get(
     "SELECT COUNT(*) AS count FROM characters WHERE account_id IS NULL"

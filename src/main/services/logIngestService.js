@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const chokidar = require("chokidar");
 const { parseLine } = require("../parsers/eventParsers");
+const { FactionResolver } = require("./factionResolver");
 
 const MAX_CHARACTER_CONTEXT_SCAN_BYTES = 8 * 1024 * 1024;
 const LIVE_POLL_INTERVAL_MS = 1500;
@@ -9,6 +10,7 @@ const LIVE_POLL_INTERVAL_MS = 1500;
 class LogIngestService {
   constructor(db) {
     this.db = db;
+    this.factionResolver = new FactionResolver();
     this.logsDirectory = "";
     this.accountName = "";
     this.currentAccountId = null;
@@ -35,7 +37,7 @@ class LogIngestService {
 
   async start() {
     if (this.running) {
-      return { ok: true, status: "already_running" };
+      return this.getState({ ok: true, status: "already_running" });
     }
     if (!this.accountName) {
       return { ok: false, error: "Active account is not set." };
@@ -44,9 +46,9 @@ class LogIngestService {
       return { ok: false, error: "Logs directory is not set or does not exist." };
     }
     this.currentAccountId = await this.ensureAccount(this.accountName, this.logsDirectory);
+    await this.backfillEnemyFactions();
     this.running = true;
     await this.parseHistoricalLogs();
-    await this.backfillBadgesFromLogs();
     this.startWatch();
     this.startPolling();
     return this.getState({ ok: true, status: "running" });
@@ -298,39 +300,6 @@ class LogIngestService {
     return lastDetectedName;
   }
 
-  async backfillBadgesFromLogs() {
-    const files = this.listLogFiles();
-    for (const file of files) {
-      await this.backfillBadgesForFile(file.fullPath);
-    }
-  }
-
-  async backfillBadgesForFile(filePath) {
-    const stats = fs.statSync(filePath);
-    let fileCharacterId = await this.resolveCharacterIdForFile(filePath, stats.size);
-    const text = fs.readFileSync(filePath, "utf8");
-    const lines = text.split(/\r?\n/);
-    for (const line of lines) {
-      const event = parseLine(line);
-      if (!event) {
-        continue;
-      }
-      if (event.type === "character_detected") {
-        fileCharacterId = await this.ensureCharacter(event.payload.name);
-        this.currentCharacterName = event.payload.name;
-        this.fileCharacterIds.set(filePath, fileCharacterId);
-        continue;
-      }
-      if (event.type === "badge_unlocked" && fileCharacterId) {
-        await this.insertBadgeUnlock(
-          fileCharacterId,
-          event.payload.badgeName,
-          event.timestamp
-        );
-      }
-    }
-  }
-
   async ensureAccount(name, logsDir) {
     await this.db.run(
       "INSERT OR IGNORE INTO accounts (name, logs_dir) VALUES (?, ?)",
@@ -356,6 +325,32 @@ class LogIngestService {
     return character.id;
   }
 
+  async backfillEnemyFactions() {
+    if (!this.currentAccountId) {
+      return;
+    }
+    const rows = await this.db.all(
+      `
+      SELECT ed.id, ed.enemy_name
+      FROM enemy_defeats ed
+      JOIN characters c ON c.id = ed.character_id
+      WHERE c.account_id = ?
+        AND (ed.enemy_faction IS NULL OR ed.enemy_faction = '' OR ed.enemy_faction = 'Unknown')
+      `,
+      [this.currentAccountId]
+    );
+    for (const row of rows) {
+      const faction = this.factionResolver.infer(row.enemy_name);
+      if (faction === "Unknown") {
+        continue;
+      }
+      await this.db.run("UPDATE enemy_defeats SET enemy_faction = ? WHERE id = ?", [
+        faction,
+        row.id
+      ]);
+    }
+  }
+
   async handleEvent(event, fileCharacterId = null) {
     if (!fileCharacterId) {
       return;
@@ -366,9 +361,11 @@ class LogIngestService {
         await this.insertBadgeUnlock(characterId, event.payload.badgeName, event.timestamp);
         break;
       case "enemy_defeat":
+        const faction = this.factionResolver.infer(event.payload.enemyName);
         await this.db.run(
-          "INSERT INTO enemy_defeats (character_id, enemy_name, timestamp) VALUES (?, ?, ?)",
-          [characterId, event.payload.enemyName, event.timestamp]
+          `INSERT INTO enemy_defeats (character_id, enemy_name, enemy_faction, timestamp)
+           VALUES (?, ?, ?, ?)`,
+          [characterId, event.payload.enemyName, faction, event.timestamp]
         );
         break;
       case "influence_gain":
@@ -384,12 +381,6 @@ class LogIngestService {
         await this.db.run(
           "INSERT INTO missions (character_id, mission_name, timestamp) VALUES (?, ?, ?)",
           [characterId, event.payload.missionName, event.timestamp]
-        );
-        break;
-      case "power_used":
-        await this.db.run(
-          "INSERT INTO powers_used (character_id, power_name, timestamp) VALUES (?, ?, ?)",
-          [characterId, event.payload.powerName, event.timestamp]
         );
         break;
       case "loot_received":
@@ -423,6 +414,7 @@ class LogIngestService {
       [characterId, badge.id, timestamp]
     );
   }
+
 }
 
 module.exports = {

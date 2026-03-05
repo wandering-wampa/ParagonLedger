@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS enemy_defeats (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL,
   enemy_name TEXT NOT NULL,
+  enemy_faction TEXT,
   timestamp TEXT NOT NULL,
   FOREIGN KEY(character_id) REFERENCES characters(id)
 );
@@ -102,6 +103,15 @@ CREATE TABLE IF NOT EXISTS build_plans (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   character_id INTEGER NOT NULL,
   source_file TEXT,
+  build_name TEXT,
+  class_name TEXT,
+  origin TEXT,
+  alignment TEXT,
+  target_level INTEGER,
+  mids_app TEXT,
+  mids_version TEXT,
+  mids_database TEXT,
+  mids_database_version TEXT,
   imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(character_id) REFERENCES characters(id)
 );
@@ -110,9 +120,31 @@ CREATE TABLE IF NOT EXISTS build_plan_levels (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   build_plan_id INTEGER NOT NULL,
   level INTEGER NOT NULL,
+  power_uid TEXT,
+  power_set TEXT,
   power_name TEXT NOT NULL,
+  stat_include INTEGER NOT NULL DEFAULT 1,
+  proc_include INTEGER NOT NULL DEFAULT 1,
+  variable_value INTEGER NOT NULL DEFAULT 0,
+  inherent_slots_used INTEGER NOT NULL DEFAULT 0,
   enhancement_slots INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY(build_plan_id) REFERENCES build_plans(id)
+);
+
+CREATE TABLE IF NOT EXISTS build_plan_enhancements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  build_plan_level_id INTEGER NOT NULL,
+  slot_level INTEGER NOT NULL DEFAULT 0,
+  is_inherent INTEGER NOT NULL DEFAULT 0,
+  enhancement_uid TEXT NOT NULL,
+  enhancement_display TEXT,
+  enhancement_set TEXT,
+  set_piece TEXT,
+  grade TEXT,
+  io_level INTEGER,
+  relative_level TEXT,
+  obtained INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY(build_plan_level_id) REFERENCES build_plan_levels(id)
 );
 
 CREATE TABLE IF NOT EXISTS parser_state (

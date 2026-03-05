@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./services/api";
 import { usePolling } from "./hooks/usePolling";
 import { CharacterList } from "./components/CharacterList";
@@ -6,6 +6,7 @@ import { StatsGrid } from "./components/StatsGrid";
 import { AnalyticsCharts } from "./components/AnalyticsCharts";
 import { BadgeTimeline } from "./components/BadgeTimeline";
 import { BadgeBrowser } from "./components/BadgeBrowser";
+import { BuildPlannerPanel } from "./components/BuildPlannerPanel";
 
 export function App() {
   const [settings, setSettings] = useState({
@@ -21,9 +22,14 @@ export function App() {
   const [badgeCatalog, setBadgeCatalog] = useState([]);
   const [buildPlan, setBuildPlan] = useState({ build: null, levels: [] });
   const [status, setStatus] = useState("stopped");
+  const [parserRunning, setParserRunning] = useState(false);
+  const [parserBusy, setParserBusy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState("");
   const [currentLogFile, setCurrentLogFile] = useState("");
   const [currentParsedCharacter, setCurrentParsedCharacter] = useState("");
   const [lastMessage, setLastMessage] = useState("");
+  const didBootRef = useRef(false);
 
   const activeAccount = useMemo(
     () => accounts.find((account) => account.id === selectedAccountId) || null,
@@ -102,18 +108,58 @@ export function App() {
 
   const loadParserState = useCallback(async () => {
     const state = await api.getParserState();
-    if (state?.status) {
-      setStatus(state.status);
-    }
+    const running = Boolean(state?.running ?? state?.status === "running");
+    setParserRunning(running);
+    setStatus(state?.status || (running ? "running" : "stopped"));
     setCurrentLogFile(state?.currentLogFilePath || "");
     setCurrentParsedCharacter(state?.currentCharacterName || "");
   }, []);
 
+  const refreshAll = useCallback(
+    async (showMessage = true) => {
+      setRefreshing(true);
+      try {
+        await loadParserState();
+        await loadAccounts();
+        await loadCharacters();
+        await loadCharacterData();
+        setLastRefreshedAt(new Date().toISOString());
+        if (showMessage) {
+          setLastMessage("Dashboard refreshed.");
+        }
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [loadAccounts, loadCharacterData, loadCharacters, loadParserState]
+  );
+
   useEffect(() => {
+    if (didBootRef.current) {
+      return;
+    }
+    didBootRef.current = true;
     const boot = async () => {
-      const currentSettings = await api.getSettings();
+      let currentSettings = await api.getSettings();
+      if (!currentSettings.activeAccountName && currentSettings.accountLogs?.length) {
+        const fallback = currentSettings.accountLogs[0];
+        currentSettings = await api.setActiveAccount(fallback.accountName, fallback.logsDir);
+      }
       setSettings(currentSettings);
       await loadAccounts(currentSettings);
+      if (currentSettings.activeAccountName && currentSettings.accountLogs?.length) {
+        const autoStartResult = await api.startParser();
+        if (autoStartResult?.ok) {
+          setParserRunning(Boolean(autoStartResult.running ?? true));
+          setStatus(autoStartResult.status || "running");
+          setCurrentLogFile(autoStartResult.currentLogFilePath || "");
+          setCurrentParsedCharacter(autoStartResult.currentCharacterName || "");
+          setLastMessage("Parser started automatically.");
+        } else if (autoStartResult?.error) {
+          setStatus("error");
+          setLastMessage(autoStartResult.error);
+        }
+      }
       await loadParserState();
     };
     boot();
@@ -127,7 +173,7 @@ export function App() {
     loadCharacterData();
   }, [loadCharacterData]);
 
-  const pollMs = status === "running" ? 1500 : 5000;
+  const pollMs = parserRunning ? 1500 : 5000;
   usePolling(loadParserState, pollMs, true);
   usePolling(() => loadAccounts(), pollMs, true);
   usePolling(loadCharacters, pollMs, Boolean(selectedAccountId));
@@ -142,6 +188,7 @@ export function App() {
     setSettings(updated);
     await loadAccounts(updated);
     await loadCharacters();
+    setParserRunning(false);
     setStatus("stopped");
     setCurrentLogFile("");
     setCurrentParsedCharacter("");
@@ -156,6 +203,7 @@ export function App() {
     if (account) {
       const updated = await api.setActiveAccount(account.name, account.logs_dir);
       setSettings(updated);
+      setParserRunning(false);
       setStatus("stopped");
       setCurrentLogFile("");
       setCurrentParsedCharacter("");
@@ -163,28 +211,40 @@ export function App() {
     }
   };
 
-  const startParser = async () => {
-    if (!activeAccount) {
-      setStatus("error");
-      setLastMessage("Select an account with a configured logs directory first.");
+  const toggleParser = async () => {
+    if (parserBusy) {
       return;
     }
-    const result = await api.startParser();
-    setStatus(result.ok ? "running" : "error");
-    setCurrentLogFile(result.currentLogFilePath || "");
-    setCurrentParsedCharacter(result.currentCharacterName || "");
-    setLastMessage(result.error || result.status || "");
-    await loadAccounts();
-    await loadCharacters();
-    await loadCharacterData();
-  };
-
-  const stopParser = async () => {
-    const result = await api.stopParser();
-    setStatus(result.status || "stopped");
-    setCurrentLogFile(result.currentLogFilePath || "");
-    setCurrentParsedCharacter(result.currentCharacterName || "");
-    setLastMessage(result.status || "");
+    setParserBusy(true);
+    try {
+      if (parserRunning) {
+        const result = await api.stopParser();
+        const running = Boolean(result?.running ?? result?.status === "running");
+        setParserRunning(running);
+        setStatus(result?.status || (running ? "running" : "stopped"));
+        setCurrentLogFile(result?.currentLogFilePath || "");
+        setCurrentParsedCharacter(result?.currentCharacterName || "");
+        setLastMessage(result?.error || "Parsing paused.");
+        return;
+      }
+      if (!activeAccount) {
+        setStatus("error");
+        setLastMessage("Select an account with a configured logs directory first.");
+        return;
+      }
+      const result = await api.startParser();
+      const running = Boolean(
+        (result?.running ?? (result?.status === "running")) || result?.ok
+      );
+      setParserRunning(running);
+      setStatus(result?.status || (running ? "running" : "error"));
+      setCurrentLogFile(result?.currentLogFilePath || "");
+      setCurrentParsedCharacter(result?.currentCharacterName || "");
+      setLastMessage(result?.error || "Parsing resumed.");
+      await refreshAll(false);
+    } finally {
+      setParserBusy(false);
+    }
   };
 
   const exportJson = async () => {
@@ -205,7 +265,9 @@ export function App() {
     const result = await api.importBuild(selectedCharacterId);
     setLastMessage(
       result.ok
-        ? `Imported ${result.importedLevels} build levels.`
+        ? `Imported ${result.importedLevels} build levels and ${
+            result.importedEnhancements || 0
+          } enhancements.`
         : result.error || "Build import canceled."
     );
     await loadCharacterData();
@@ -257,18 +319,20 @@ export function App() {
           </label>
           <button onClick={chooseLogsDir}>Add/Update Account Logs Folder</button>
           <button
-            onClick={startParser}
-            className={status === "running" ? "parser-btn parser-btn--active" : "parser-btn"}
+            onClick={toggleParser}
+            disabled={parserBusy}
+            className={parserRunning ? "parser-btn parser-btn--active" : "parser-btn"}
           >
-            Start Parser
+            {parserBusy
+              ? parserRunning
+                ? "Pausing..."
+                : "Resuming..."
+              : parserRunning
+                ? "Pause Parsing"
+                : "Resume Parsing"}
           </button>
-          <button
-            onClick={stopParser}
-            className={
-              status === "stopped" ? "parser-btn parser-btn--active" : "parser-btn"
-            }
-          >
-            Stop Parser
+          <button onClick={() => refreshAll(true)} disabled={refreshing || parserBusy}>
+            {refreshing ? "Refreshing..." : "Refresh"}
           </button>
           <button onClick={exportJson}>Export JSON</button>
           <button onClick={exportCsv}>Export CSV</button>
@@ -293,8 +357,14 @@ export function App() {
           <span className="mono">{currentParsedCharacter || "Unknown"}</span>
         </p>
         <p>
-          <strong>Parser status:</strong> {status}
+          <strong>Parser status:</strong>{" "}
+          {parserRunning ? "running" : status === "error" ? "error" : "paused"}
         </p>
+        {lastRefreshedAt && (
+          <p>
+            <strong>Last refresh:</strong> {new Date(lastRefreshedAt).toLocaleTimeString()}
+          </p>
+        )}
         {lastMessage && (
           <p>
             <strong>Message:</strong> {lastMessage}
@@ -313,16 +383,16 @@ export function App() {
           <AnalyticsCharts dashboard={dashboard} />
           <section className="split-grid">
             <section className="card">
-              <h3>Top Powers</h3>
+              <h3># of Enemies Defeated by Faction</h3>
               <ul className="simple-list">
-                {(dashboard?.topPowers || []).map((entry) => (
+                {(dashboard?.enemyFactions || []).map((entry) => (
                   <li key={entry.name}>
                     <span>{entry.name}</span>
-                    <span>{entry.uses}</span>
+                    <span>{entry.defeats}</span>
                   </li>
                 ))}
-                {!dashboard?.topPowers?.length && (
-                  <li className="muted">No power usage yet.</li>
+                {!dashboard?.enemyFactions?.length && (
+                  <li className="muted">No enemy defeats yet.</li>
                 )}
               </ul>
             </section>
@@ -343,24 +413,7 @@ export function App() {
           </section>
           <BadgeTimeline badges={badges} />
           <BadgeBrowser badges={badgeCatalog} />
-          <section className="card">
-            <h3>Build Planner</h3>
-            <p className="muted">
-              {buildPlan?.build
-                ? `Imported ${new Date(buildPlan.build.imported_at).toLocaleString()}`
-                : "No build imported yet."}
-            </p>
-            <ul className="simple-list">
-              {(buildPlan?.levels || []).map((row, idx) => (
-                <li key={`${row.level}-${row.power_name}-${idx}`}>
-                  <span>
-                    L{row.level} - {row.power_name}
-                  </span>
-                  <span>{row.enhancement_slots} slots</span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <BuildPlannerPanel buildPlan={buildPlan} />
         </section>
       </main>
     </div>

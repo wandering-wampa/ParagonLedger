@@ -56,18 +56,13 @@ const patterns = [
   },
   {
     type: "zone_entry",
-    regex: /Entering\s+zone:\s*(.+)$/i,
+    regex: /Entering(?:\s+zone:)?\s+(.+?)[.!]?$/i,
     map: (m) => ({ zoneName: m[1].trim() })
   },
   {
     type: "mission_complete",
     regex: /Mission Complete:\s*(.+)$/i,
     map: (m) => ({ missionName: m[1].trim() })
-  },
-  {
-    type: "power_used",
-    regex: /You activated\s+(.+?)[.!]?$/i,
-    map: (m) => ({ powerName: m[1].trim() })
   },
   {
     type: "loot_received",
