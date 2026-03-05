@@ -1,0 +1,11 @@
+{
+  "name": "Sample Scrapper Build",
+  "levels": [
+    { "level": 1, "power": "Slash", "slots": 2 },
+    { "level": 2, "power": "Hack", "slots": 2 },
+    { "level": 4, "power": "Battle Agility", "slots": 1 },
+    { "level": 6, "power": "Build Up", "slots": 2 },
+    { "level": 8, "power": "Hasten", "slots": 2 },
+    { "level": 10, "power": "Whirling Sword", "slots": 3 }
+  ]
+}
