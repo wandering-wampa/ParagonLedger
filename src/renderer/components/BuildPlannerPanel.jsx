@@ -24,6 +24,27 @@ function renderSlotPath(level) {
   return items.join(" -> ");
 }
 
+function renderPowerSetSubtitle(level) {
+  const setName = String(level?.power_set || "Unknown Set").trim() || "Unknown Set";
+  const setKey = setName.toLowerCase();
+  const hideSlotsForSet = [
+    "accolades",
+    "alpha",
+    "hybrid",
+    "interface",
+    "destiny",
+    "judgment",
+    "judgement",
+    "lore"
+  ].includes(setKey);
+
+  if (hideSlotsForSet) {
+    return setName;
+  }
+
+  return `${setName} | ${level?.enhancement_slots || 0} slots`;
+}
+
 export function BuildPlannerPanel({ buildPlan }) {
   const [activeTab, setActiveTab] = useState("overview");
   const build = buildPlan?.build;
@@ -176,7 +197,7 @@ export function BuildPlannerPanel({ buildPlan }) {
                         L{level.level} - {level.power_name}
                       </p>
                       <p className="muted">
-                        {level.power_set || "Unknown Set"} | {level.enhancement_slots} slots
+                        {renderPowerSetSubtitle(level)}
                       </p>
                     </div>
                   </div>
