@@ -146,6 +146,19 @@ p {
   border-color: var(--accent);
 }
 
+.character-row--draggable {
+  cursor: grab;
+}
+
+.character-row--draggable:active {
+  cursor: grabbing;
+}
+
+.character-row--drag-target {
+  border-color: #6fb3ff;
+  box-shadow: 0 0 0 1px #6fb3ff inset;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -400,6 +413,15 @@ p {
   margin-top: 0.2rem;
   font-size: 0.8rem;
   color: #7dcdb0;
+}
+
+.badge-browser-actions {
+  margin-top: 0.2rem;
+}
+
+.badge-browser-actions button {
+  font-size: 0.78rem;
+  padding: 0.36rem 0.55rem;
 }
 
 @media (max-width: 1050px) {

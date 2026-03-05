@@ -19,7 +19,6 @@ No cloud, no telemetry, no remote services.
 - Influence gain tracking.
 - Zone, mission, power-use, and loot event ingestion.
 - Basic analytics charts and top lists.
-- JSON/CSV export.
 - Initial build-planner import path for Mids Reborn `.mbd` (JSON-based) exports.
 
 ## Project Structure
@@ -36,7 +35,6 @@ ParagonLedger/
       parsers/
         eventParsers.js
       services/
-        exportService.js
         logIngestService.js
         midsImportService.js
         queryService.js

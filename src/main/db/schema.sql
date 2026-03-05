@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS characters (
   account_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   archetype TEXT,
+  display_order INTEGER NOT NULL DEFAULT 0,
   created_date TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(account_id) REFERENCES accounts(id),
   UNIQUE(account_id, name)

@@ -4,7 +4,6 @@ const { initDatabase } = require("../src/main/db/database");
 const { SettingsService } = require("../src/main/services/settingsService");
 const { LogIngestService } = require("../src/main/services/logIngestService");
 const { QueryService } = require("../src/main/services/queryService");
-const { ExportService } = require("../src/main/services/exportService");
 const { MidsImportService } = require("../src/main/services/midsImportService");
 const { PowerCatalogService } = require("../src/main/services/powerCatalogService");
 
@@ -13,7 +12,6 @@ let db;
 let settings;
 let ingest;
 let query;
-let exporter;
 let midsImporter;
 let powerCatalog;
 
@@ -102,6 +100,9 @@ function wireIpc() {
   ipcMain.handle("characters:list", async (_event, accountId) =>
     query.getCharactersWithStats(accountId)
   );
+  ipcMain.handle("characters:reorder", async (_event, accountId, characterIds) =>
+    query.reorderCharacters(accountId, characterIds)
+  );
   ipcMain.handle("dashboard:get", async (_event, characterId) =>
     query.getDashboard(characterId)
   );
@@ -111,19 +112,9 @@ function wireIpc() {
   ipcMain.handle("badges:getBrowser", async (_event, characterId) =>
     query.getBadgeBrowser(characterId)
   );
-  ipcMain.handle("exports:run", async (_event, format) => {
-    const filters =
-      format === "csv"
-        ? [{ name: "CSV files", extensions: ["csv"] }]
-        : [{ name: "JSON files", extensions: ["json"] }];
-    const result = await dialog.showSaveDialog(mainWindow, {
-      filters
-    });
-    if (result.canceled || !result.filePath) {
-      return { ok: false, canceled: true };
-    }
-    return exporter.exportTo(format, result.filePath);
-  });
+  ipcMain.handle("badges:unlock", async (_event, characterId, badgeId, unlockedAt) =>
+    query.unlockBadge(characterId, badgeId, unlockedAt)
+  );
   ipcMain.handle("build:import", async (_event, characterId) => {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ["openFile"],
@@ -149,7 +140,6 @@ app.whenReady().then(async () => {
   ingest = new LogIngestService(db);
   powerCatalog = new PowerCatalogService();
   query = new QueryService(db, { powerCatalog });
-  exporter = new ExportService(db);
   midsImporter = new MidsImportService(db);
   for (const entry of settings.getSettings().accountLogs || []) {
     await upsertAccountRow(entry.accountName, entry.logsDir);

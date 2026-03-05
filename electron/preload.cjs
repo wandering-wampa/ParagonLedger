@@ -11,12 +11,15 @@ contextBridge.exposeInMainWorld("heroLedgerApi", {
   getParserState: () => ipcRenderer.invoke("parser:getState"),
   getAccounts: () => ipcRenderer.invoke("accounts:list"),
   getCharacters: (accountId) => ipcRenderer.invoke("characters:list", accountId),
+  reorderCharacters: (accountId, characterIds) =>
+    ipcRenderer.invoke("characters:reorder", accountId, characterIds),
   getDashboard: (characterId) => ipcRenderer.invoke("dashboard:get", characterId),
   getBadgeTimeline: (characterId) =>
     ipcRenderer.invoke("badges:getTimeline", characterId),
   getBadgeBrowser: (characterId) =>
     ipcRenderer.invoke("badges:getBrowser", characterId),
-  exportData: (format) => ipcRenderer.invoke("exports:run", format),
+  unlockBadge: (characterId, badgeId, unlockedAt) =>
+    ipcRenderer.invoke("badges:unlock", characterId, badgeId, unlockedAt),
   importBuild: (characterId) => ipcRenderer.invoke("build:import", characterId),
   getLatestBuild: (characterId) => ipcRenderer.invoke("build:getLatest", characterId)
 });

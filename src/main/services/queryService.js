@@ -50,6 +50,7 @@ class QueryService {
         a.name AS account_name,
         c.name,
         c.archetype,
+        c.display_order,
         (SELECT COUNT(*) FROM badge_unlocks bu WHERE bu.character_id = c.id) AS badges_earned,
         (SELECT COUNT(*) FROM enemy_defeats ed WHERE ed.character_id = c.id) AS enemies_defeated,
         (SELECT COUNT(*) FROM missions m WHERE m.character_id = c.id) AS missions_completed,
@@ -57,11 +58,57 @@ class QueryService {
       FROM characters c
       JOIN accounts a ON a.id = c.account_id
       WHERE (? IS NULL OR c.account_id = ?)
-      ORDER BY c.name COLLATE NOCASE ASC
+      ORDER BY
+        CASE WHEN IFNULL(c.display_order, 0) > 0 THEN 0 ELSE 1 END ASC,
+        c.display_order ASC,
+        c.name COLLATE NOCASE ASC
       `,
       hasAccountFilter ? [Number(accountId), Number(accountId)] : [null, null]
     );
     return rows.filter((row) => this.isDisplayableCharacterName(row.name));
+  }
+
+  async reorderCharacters(accountId, characterIds = []) {
+    const aid = Number(accountId);
+    if (!Number.isFinite(aid) || aid <= 0) {
+      return { ok: false, error: "Invalid account id." };
+    }
+    if (!Array.isArray(characterIds) || !characterIds.length) {
+      return { ok: false, error: "No characters provided for reordering." };
+    }
+    const orderedIds = characterIds
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+    if (!orderedIds.length) {
+      return { ok: false, error: "Invalid character ids." };
+    }
+
+    const uniqueIds = [...new Set(orderedIds)];
+    const placeholders = uniqueIds.map(() => "?").join(",");
+    const rows = await this.db.all(
+      `SELECT id FROM characters WHERE account_id = ? AND id IN (${placeholders})`,
+      [aid, ...uniqueIds]
+    );
+    const found = new Set(rows.map((row) => Number(row.id)));
+    if (found.size !== uniqueIds.length) {
+      return { ok: false, error: "One or more characters do not belong to this account." };
+    }
+
+    await this.db.exec("BEGIN TRANSACTION");
+    try {
+      for (let idx = 0; idx < uniqueIds.length; idx += 1) {
+        await this.db.run(
+          "UPDATE characters SET display_order = ? WHERE account_id = ? AND id = ?",
+          [idx + 1, aid, uniqueIds[idx]]
+        );
+      }
+      await this.db.exec("COMMIT");
+    } catch (error) {
+      await this.db.exec("ROLLBACK");
+      return { ok: false, error: error?.message || "Failed to reorder characters." };
+    }
+
+    return { ok: true, count: uniqueIds.length };
   }
 
   isDisplayableCharacterName(name) {
@@ -193,6 +240,48 @@ class QueryService {
       `,
       [Number(characterId)]
     );
+  }
+
+  async unlockBadge(characterId, badgeId, unlockedAt = null) {
+    const cid = Number(characterId);
+    const bid = Number(badgeId);
+    if (!Number.isFinite(cid) || cid <= 0) {
+      return { ok: false, error: "Invalid character id." };
+    }
+    if (!Number.isFinite(bid) || bid <= 0) {
+      return { ok: false, error: "Invalid badge id." };
+    }
+
+    const badge = await this.db.get(
+      "SELECT id, badge_name FROM badges WHERE id = ?",
+      [bid]
+    );
+    if (!badge) {
+      return { ok: false, error: "Badge not found." };
+    }
+
+    const timestamp =
+      typeof unlockedAt === "string" && unlockedAt.trim()
+        ? unlockedAt.trim()
+        : new Date().toISOString();
+    const result = await this.db.run(
+      `INSERT OR IGNORE INTO badge_unlocks (character_id, badge_id, timestamp)
+       VALUES (?, ?, ?)`,
+      [cid, bid, timestamp]
+    );
+    const row = await this.db.get(
+      `SELECT timestamp FROM badge_unlocks
+       WHERE character_id = ? AND badge_id = ?`,
+      [cid, bid]
+    );
+
+    return {
+      ok: true,
+      created: result.changes > 0,
+      badgeId: bid,
+      badgeName: badge.badge_name,
+      unlockedAt: row?.timestamp || timestamp
+    };
   }
 
   buildInsights(build, levels) {

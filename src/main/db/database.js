@@ -78,6 +78,7 @@ async function ensureSchema(db) {
       account_id INTEGER NOT NULL,
       name TEXT NOT NULL,
       archetype TEXT,
+      display_order INTEGER NOT NULL DEFAULT 0,
       created_date TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(account_id) REFERENCES accounts(id),
       UNIQUE(account_id, name)
@@ -257,6 +258,7 @@ async function rebuildCharactersTableForAccounts(db, fallbackAccountId) {
         account_id INTEGER NOT NULL,
         name TEXT NOT NULL,
         archetype TEXT,
+        display_order INTEGER NOT NULL DEFAULT 0,
         created_date TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(account_id) REFERENCES accounts(id),
         UNIQUE(account_id, name)
@@ -264,12 +266,13 @@ async function rebuildCharactersTableForAccounts(db, fallbackAccountId) {
     `);
     await db.run(
       `
-      INSERT INTO characters_new (id, account_id, name, archetype, created_date)
+      INSERT INTO characters_new (id, account_id, name, archetype, display_order, created_date)
       SELECT
         id,
         COALESCE(account_id, ?),
         name,
         archetype,
+        0,
         created_date
       FROM characters
       `,
@@ -304,6 +307,13 @@ async function migrateLegacySchema(db) {
   const accountIdExists = await hasColumn(db, "characters", "account_id");
   if (!accountIdExists) {
     await db.exec("ALTER TABLE characters ADD COLUMN account_id INTEGER;");
+  }
+
+  const displayOrderExists = await hasColumn(db, "characters", "display_order");
+  if (!displayOrderExists) {
+    await db.exec(
+      "ALTER TABLE characters ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0;"
+    );
   }
 
   const enemyFactionExists = await hasColumn(db, "enemy_defeats", "enemy_faction");

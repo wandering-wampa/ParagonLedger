@@ -14,10 +14,11 @@ function resolveIconPath(iconPath) {
   return `/${normalized}`;
 }
 
-export function BadgeBrowser({ badges }) {
+export function BadgeBrowser({ badges, onUnlockBadge }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [unlockingBadgeId, setUnlockingBadgeId] = useState(null);
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -52,6 +53,18 @@ export function BadgeBrowser({ badges }) {
   }, [badges, filter, search, category]);
 
   const unlockedCount = badges.filter((x) => x.unlocked).length;
+
+  const handleUnlock = async (badge) => {
+    if (!onUnlockBadge || !badge || badge.unlocked) {
+      return;
+    }
+    setUnlockingBadgeId(badge.id);
+    try {
+      await onUnlockBadge(badge);
+    } finally {
+      setUnlockingBadgeId(null);
+    }
+  };
 
   return (
     <section className="card">
@@ -134,6 +147,16 @@ export function BadgeBrowser({ badges }) {
                   ? `Unlocked ${new Date(badge.unlocked_at).toLocaleString()}`
                   : "Locked"}
               </p>
+              {!badge.unlocked && onUnlockBadge ? (
+                <div className="badge-browser-actions">
+                  <button
+                    onClick={() => handleUnlock(badge)}
+                    disabled={unlockingBadgeId === badge.id}
+                  >
+                    {unlockingBadgeId === badge.id ? "Unlocking..." : "Mark Unlocked"}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </article>
         ))}

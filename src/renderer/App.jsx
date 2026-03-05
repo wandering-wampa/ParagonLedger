@@ -247,16 +247,6 @@ export function App() {
     }
   };
 
-  const exportJson = async () => {
-    const result = await api.exportData("json");
-    setLastMessage(result.ok ? `Exported: ${result.filePath}` : "Export canceled.");
-  };
-
-  const exportCsv = async () => {
-    const result = await api.exportData("csv");
-    setLastMessage(result.ok ? `Exported: ${result.filePath}` : "Export canceled.");
-  };
-
   const importBuild = async () => {
     if (!selectedCharacterId) {
       setLastMessage("Select a character before importing a build.");
@@ -271,6 +261,54 @@ export function App() {
         : result.error || "Build import canceled."
     );
     await loadCharacterData();
+  };
+
+  const manuallyUnlockBadge = async (badge) => {
+    if (!selectedCharacterId) {
+      setLastMessage("Select a character before unlocking badges.");
+      return { ok: false, error: "No character selected." };
+    }
+    if (!badge?.id) {
+      setLastMessage("Invalid badge selection.");
+      return { ok: false, error: "Invalid badge id." };
+    }
+    const result = await api.unlockBadge(selectedCharacterId, badge.id);
+    if (!result?.ok) {
+      setLastMessage(result?.error || "Failed to unlock badge.");
+      return result;
+    }
+    setLastMessage(
+      result.created
+        ? `Manually unlocked badge: ${badge.badge_name}.`
+        : `Badge already unlocked: ${badge.badge_name}.`
+    );
+    await loadCharacters();
+    await loadCharacterData();
+    return result;
+  };
+
+  const reorderCharacters = async (orderedIds, previousIds = []) => {
+    if (!selectedAccountId) {
+      return { ok: false, error: "No account selected." };
+    }
+    const rowById = new Map(characters.map((row) => [row.id, row]));
+    const optimistic = orderedIds.map((id) => rowById.get(id)).filter(Boolean);
+    const leftovers = characters.filter((row) => !orderedIds.includes(row.id));
+    setCharacters([...optimistic, ...leftovers]);
+
+    const result = await api.reorderCharacters(selectedAccountId, orderedIds);
+    if (!result?.ok) {
+      const rollbackById = new Map(characters.map((row) => [row.id, row]));
+      const rollback = previousIds.map((id) => rollbackById.get(id)).filter(Boolean);
+      const rollbackRest = characters.filter((row) => !previousIds.includes(row.id));
+      setCharacters([...rollback, ...rollbackRest]);
+      setLastMessage(result?.error || "Failed to reorder characters.");
+      return result;
+    }
+
+    setLastMessage("Character order updated.");
+    await loadCharacters();
+    return result;
   };
 
   if (needsOnboarding) {
@@ -334,8 +372,6 @@ export function App() {
           <button onClick={() => refreshAll(true)} disabled={refreshing || parserBusy}>
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
-          <button onClick={exportJson}>Export JSON</button>
-          <button onClick={exportCsv}>Export CSV</button>
           <button onClick={importBuild}>Import Build</button>
         </div>
       </header>
@@ -377,6 +413,7 @@ export function App() {
           characters={characters}
           selectedId={selectedCharacterId}
           onSelect={setSelectedCharacterId}
+          onReorder={reorderCharacters}
         />
         <section className="main-panel">
           <StatsGrid summary={dashboard?.summary} />
@@ -412,7 +449,7 @@ export function App() {
             </section>
           </section>
           <BadgeTimeline badges={badges} />
-          <BadgeBrowser badges={badgeCatalog} />
+          <BadgeBrowser badges={badgeCatalog} onUnlockBadge={manuallyUnlockBadge} />
           <BuildPlannerPanel buildPlan={buildPlan} />
         </section>
       </main>

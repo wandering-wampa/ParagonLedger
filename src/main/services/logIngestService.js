@@ -314,9 +314,14 @@ class LogIngestService {
     const safeName = name.trim() || "Unknown Hero";
     const accountId =
       this.currentAccountId || (await this.ensureAccount(this.accountName, this.logsDirectory));
+    const orderRow = await this.db.get(
+      "SELECT IFNULL(MAX(display_order), 0) AS max_order FROM characters WHERE account_id = ?",
+      [accountId]
+    );
+    const nextOrder = Number(orderRow?.max_order || 0) + 1;
     await this.db.run(
-      "INSERT OR IGNORE INTO characters (account_id, name, archetype) VALUES (?, ?, ?)",
-      [accountId, safeName, "Unknown"]
+      "INSERT OR IGNORE INTO characters (account_id, name, archetype, display_order) VALUES (?, ?, ?, ?)",
+      [accountId, safeName, "Unknown", nextOrder]
     );
     const character = await this.db.get(
       "SELECT id FROM characters WHERE account_id = ? AND name = ?",
